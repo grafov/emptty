@@ -234,12 +234,13 @@ func getDesktopBaseExec(exec string) (string, string) {
 func listAllDesktops(usr *sysuser, pathXorgDesktops, pathWaylandDesktops string) []*desktop {
 	var result []*desktop
 
-	// load Xorg desktops
-	result = append(result, listDesktops(Xorg, pathXorgDesktops, usr.homedir+pathLocalXSessions)...)
+	if usr.uid != 1000 {
+		// load Xorg desktops
+		result = append(result, listDesktops(Xorg, pathXorgDesktops, usr.homedir+pathLocalXSessions)...)
 
-	// load Wayland desktops
-	result = append(result, listDesktops(Wayland, pathWaylandDesktops, usr.homedir+pathLocalWaylandSessions)...)
-
+		// load Wayland desktops
+		result = append(result, listDesktops(Wayland, pathWaylandDesktops, usr.homedir+pathLocalWaylandSessions)...)
+	}
 	// load custom desktops
 	result = append(result, listDesktops(Custom, pathCustomSessions)...)
 
@@ -379,10 +380,10 @@ func setUserLastSession(usr *sysuser, d *desktop) {
 	doAsUser(usr, func() {
 		path := usr.homedir + pathLastSession
 		data := fmt.Sprintf("%s;%s\n", d.exec, d.env.stringify())
-		if err := mkDirsForFile(path, 0744); err != nil {
+		if err := mkDirsForFile(path, 0o744); err != nil {
 			logPrint(err)
 		}
-		if err := os.WriteFile(path, []byte(data), 0600); err != nil {
+		if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
 			logPrint(err)
 		}
 	})
